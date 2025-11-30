@@ -26,17 +26,25 @@ def about():
 def search():
     """Search page route. Return either form page to search, or search results."""
     if request.method == 'POST':
-        session['search_term'] = request.form['search']
-        return redirect(url_for('results'))
+        search_term = request.form.get('search', '').strip()
+        if search_term.strip() != "":
+            session['search_term'] = search_term
+            return redirect(url_for('results'))
+        return render_template("search.html", message="Please enter a search term.")
     return render_template("search.html")
 
 
 @app.route('/results')
 def results():
     """Results page route. Render the search results."""
+    if 'search_term' not in session:
+        return redirect(url_for('search'))
     search_term = session['search_term']
-    page = get_page(search_term)
-    return render_template("results.html", page=page)
+    try:
+        page = get_page(search_term)
+        return render_template("results.html", page=page)
+    except Exception as e:
+        return render_template("results.html", page=None, message=str(e))
 
 
 def get_page(search_term):
